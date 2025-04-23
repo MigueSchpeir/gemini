@@ -2,12 +2,12 @@
   "name": "gemini-api",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "@google-cloud/vertexai": "^0.1.3",
-    "express": "^4.18.2",
-    "body-parser": "^1.20.2"
+    "@ai-sdk/google-vertex": "latest",
+    "ai": "latest"
   }
 }

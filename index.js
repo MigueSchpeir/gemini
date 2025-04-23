@@ -1,50 +1,30 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const { VertexAI } = require('@google-cloud/vertexai');
+// index.js
+import { createVertex } from '@ai-sdk/google-vertex/edge'
+import { generateText } from 'ai'
 
-const app = express();
-app.use(bodyParser.json({ limit: '25mb' }));
-
-const vertexAI = new VertexAI({
+const vertex = createVertex({
   project: process.env.GCP_PROJECT_ID,
-  location: 'us-central1'
-});
-
-vertexAI.useKeyFile('./credentials.json');
-
-const generativeModel = vertexAI.getGenerativeModel({
-  model: 'gemini-2.0-flash-exp',
-  generationConfig: { responseMimeType: ['image/png'] }
-});
-
-app.post('/edit-image', async (req, res) => {
-  try {
-    const { prompt, base64Image } = req.body;
-
-    const result = await generativeModel.generateContent({
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            { text: prompt },
-            {
-              inlineData: {
-                mimeType: 'image/png',
-                data: base64Image
-              }
-            }
-          ]
-        }
-      ]
-    });
-
-    const file = result.response.candidates[0].content.parts[0].fileData;
-    res.json({ image: file.data });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Something went wrong.' });
+  location: 'us-central1',
+  googleCredentials: {
+    clientEmail: process.env.CLIENT_EMAIL,
+    privateKey: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'),
+    privateKeyId: process.env.PRIVATE_KEY_ID
   }
-});
+})
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Running on port ${PORT}`));
+const result = await generateText({
+  model: vertex('gemini-2.0-flash-exp'),
+  providerOptions: {
+    google: {
+      responseModalities: ['TEXT', 'IMAGE']
+    }
+  },
+  messages: [
+    {
+      role: 'user',
+      content: 'Generate an image of a flying bear'
+    }
+  ]
+})
+
+console.log(result.files)
